@@ -206,7 +206,7 @@ void insere_chave_is(Indice *iride, Chave_is chave);
 
 /* Função auxiliar para ser chamada recursivamente, inserir as novas chaves nas
  * folhas e tratar overflow no retorno da recursão. */
-int insere_aux_ip(int noderrn, Chave_ip *chave);
+int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave);
 int insere_aux_is(int noderrn, Chave_is *chave);
 
 /* VOCÊS NÃO NECESSARIAMENTE PRECISAM USAR TODAS ESSAS FUNÇÕES, É MAIS PARA TEREM UMA BASE MESMO, 
@@ -420,10 +420,7 @@ void criar_iprimary(Indice *iprimary){
 		/* criar a chave com pk, e rrn */
 		strcpy(aux_chave->pk, aux_carona.pk);
 		
-		/*  se -1  a chave não existe e deve ser adicionada
-		 * se não, entõa a achave existe e é um erro
-		 * creio que seja inutil já que o indice esta sendo criado a partir do arquivo */
-		duplicada = buscar_chave_ip( iprimary->raiz , aux_chave->pk , 0);
+		insere_chave_ip(&iprimary, * aux_chave);
 
 
 	}
@@ -491,13 +488,16 @@ void write_btree(void *salvar, int rrn, char ip){
 
 		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_ip ;i++){
+				if (salvar_ip->desc[i] == NULL)
+					break;
 				sprintf(temp,"%d", salvar_ip->desc[i]);
 				strcpy(aux_node + aux_ponteiro + i * 3, temp);
 
 		}
 
 		strcpy(ARQUIVO_IP + (rrn) * tamanho_registro_ip, aux_node);	
-
+		nregistrosip++;
+	
 	}
 	else{
 		char aux_node[tamanho_registro_is];
@@ -544,11 +544,14 @@ void write_btree(void *salvar, int rrn, char ip){
 		
 		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_is ;i++){
+				if (salvar_is->desc[i] == NULL)
+					break;
 				sprintf(temp,"%d", salvar_is->desc[i]);
 				strcpy(aux_node + aux_ponteiro + i * 3, temp);
 		}
 
 		strcpy(ARQUIVO_IS + (rrn) * tamanho_registro_is, aux_node);	
+		nregistrosis++;
 	}
 
 }
@@ -603,7 +606,6 @@ void * read_btree( void * retorno, int rrn, int ip){
 		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta
 		* descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_ip ;i++){
-				
 				strcpy(temp, aux_node + aux_ponteiro + i * 3);
 				sscanf(temp, "%d",  &retorno_ip->desc[i]);
 		}
@@ -720,4 +722,96 @@ void buscar(Indice iprimary, Indice iride){
 
 void listar(Indice iprimary, Indice iride){
 
+}
+
+/* Insere um novo registro na Árvore B */
+void insere_chave_ip(Indice *iprimary, Chave_ip chave){
+	
+	node_Btree_ip * aux_node = malloc(sizeof( node_Btree_ip));
+	Chave_ip * chave_promovida = malloc(sizeof(Chave_ip));
+
+	if( iprimary->raiz == NULL){
+		aux_node->chave[0] = chave;
+		aux_node->num_chaves++;
+		aux_node->folha = 'T';
+		write_btree(aux_node, nregistrosip, 1);
+		iprimary->raiz = 0;
+		
+	}else{
+		/* chave vai ser o filho direito no retorno*/
+		int filho_direito = insere_aux_ip(iprimary->raiz, chave_promovida, &chave);
+		if(chave_promovida != NULL){
+			aux_node->folha = 'F';
+			aux_node->num_chaves++;
+			aux_node->chave[0] = * chave_promovida;
+			aux_node->desc[0] = iprimary->raiz;
+			aux_node->desc[1] = filho_direito;
+			iprimary->raiz = nregistros;
+			write_btree(aux_node, nregistrosip, 1);			
+		}
+	}
+
+
+}
+void insere_chave_is(Indice *iride, Chave_is chave){
+
+}
+
+/* Função auxiliar para ser chamada recursivamente, inserir as novas chaves nas
+ * folhas e tratar overflow no retorno da recursão. 
+ * 0 sem problemas, 1 overflow, -1 erro
+ * nope, o retorno aqui tem que ser o RRN*/
+int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave){
+	int i;
+	int filho_direita;
+	node_Btree_ip * aux_node = malloc(sizeof(node_Btree_ip));
+	/* um monte de duvida sobre como segurar o rrn*/
+	read_btree(aux_node, noderrn, 1);
+	
+	if(aux_node->folha == 'T'){
+		
+		if(aux_node->num_chaves < ordem_ip -1){
+			i = aux_node->num_chaves;
+			
+			while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk)){
+				aux_node->chave[i] = aux_node->chave[i+1];
+				i--;
+			}
+			aux_node->chave[i] = * chave;
+			aux_node->num_chaves++;
+			chave_promovida = NULL;
+			
+			return noderrn;
+		}else
+		{
+			return divide_no_ip(noderrn, chave, -1);
+		}
+	}else
+	{
+		i = aux_node->num_chaves;
+		while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk))
+			i--;
+		i++;
+		/* Quando não encontra*/
+		filho_direita = insere_aux_ip(aux_node->desc[i], chave_promovida, chave);
+		chave_promovida = chave;
+		
+	}
+	/*caso onde da merda*/
+	return -1;
+}
+
+
+int insere_aux_is(int noderrn, Chave_is *chave){
+	return -1;
+}
+
+/* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
+ * entre os nós esq e dir. Retorna o novo nó à direita, a chave promovida e seu
+ * descendente direito, que pode ser nulo, caso a nó seja folha. */
+int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
+	return 0;
+}
+int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
+	return 0;
 }
