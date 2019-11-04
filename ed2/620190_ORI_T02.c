@@ -404,11 +404,12 @@ void gerarChave(Carona *novo){
 // Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados
 void criar_iprimary(Indice *iprimary){
 	int i;
+	Carona aux_carona;
 	//ler todas as caronas do arquivo
 	for(i=0; i< nregistros; i++){
 		// testar se a carona existe
 		// pode haver o registro mas a carona não existir?
-
+		aux_carona = recuperar_registro(i);
 
 	}
 	
