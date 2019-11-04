@@ -795,7 +795,6 @@ int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave){
 		/* Quando não encontra*/
 		filho_direita = insere_aux_ip(aux_node->desc[i], chave_promovida, chave);
 		chave_promovida = chave;
-		
 	}
 	/*caso onde da merda*/
 	return -1;
