@@ -122,46 +122,45 @@ int tamanho_registro_is;
  * ========================================================================== */
 
 /* Recebe do usuário uma string simulando o arquivo completo e retorna o número
-  * de registros. */
-// done
+ * de registros. 
+ *done */
 int carregar_arquivo();
 
 /* (Re)faz o Cria iprimary*/
 void criar_iprimary(Indice *iprimary);
-
 /* (Re)faz o índice de Caronas  */
 void criar_iride(Indice *iride);
 
 /*Escreve um nó da árvore no arquivo de índice,
-* O terceiro parametro serve para informar qual indice se trata */
-// done
+* O terceiro parametro serve para informar qual indice se trata 
+* done */
 void write_btree(void *salvar, int rrn, char ip);
 
 /*Lê um nó do arquivo de índice e retorna na estrutura*/
-// adcionei um ponteiro por onde vou retornar a struc, senguindo o padrão da função write_btree
-// done
+/*  adcionei um ponteiro por onde vou retornar a struc, senguindo o padrão da função write_btree
+* done */
 void *read_btree(void * retorno, int rrn, int ip);
 
-/* Aloca dinamicamente os vetores de chaves e descendentes */
-// (não usada)
+/* Aloca dinamicamente os vetores de chaves e descendentes 
+(não usada) */
 void *criar_no(char ip);
 
 /* Percorre a arvore e retorna o RRN da chave informada.  Retorna -1, caso não
- * encontrada. */
-// done
+ * encontrada. 
+ * done */
 int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho);
 
 /* Percorre a arvore e retorna a pk da string destino/data-hora informada. Retorna -1, caso não
- * encontrada. */
-// done
+ * encontrada.
+ * done */
 char *buscar_chave_is(const int noderrn, const char *titulo, const int exibir_caminho);
 
 /* Realiza percurso em-ordem imprimindo todas as caronas na ordem lexicografica do destino e data/hora e o
  * nível de cada nó (raiz = nível 1) */
 int imprimir_arvore_is(int noderrn, int nivel);
 
-/*Gera Chave da struct Carona*/
-//done
+/*Gera Chave da struct Carona
+* done */
 void gerarChave(Carona *novo);
 
 /* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
@@ -178,8 +177,8 @@ void listar(Indice iprimary, Indice iride);
 int imprimir_arvore_ip(int noderrn, int nivel);
 
 /* Recupera do arquivo o registro com o rrn informado e retorna os dados na
- * struct Carona */
-// done
+ * struct Carona
+* done */
 Carona recuperar_registro(int rrn);
 
 /********************FUNÇÕES DO MENU*********************/
@@ -390,7 +389,7 @@ Carona recuperar_registro(int rrn)
 
 /*Gera Chave da struct Carona*/
 void gerarChave(Carona *novo){
-	//Não tenho certeza se essa associação vai funcionar, talvez eu tenha que acessar as str
+	/* Não tenho certeza se essa associação vai funcionar, talvez eu tenha que acessar as str */
 	novo->pk[0] = toupper(novo->nome[0]);
 	novo->pk[1] = toupper(novo->placa[0]);
 	novo->pk[2] = toupper(novo->placa[1]);
@@ -404,26 +403,26 @@ void gerarChave(Carona *novo){
 	novo->pk[10] = '\0'; 
 }
 
-/* (Re)faz o Cria iprimary*/
-// Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados
+/* (Re)faz o Cria iprimary
+* Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados */
 void criar_iprimary(Indice *iprimary){
 	int i;
 	Carona aux_carona;
 	Chave_ip * aux_chave;
 	int duplicada = -1;
-	//ler todas as caronas do arquivo
+	/* ler todas as caronas do arquivo */
 	for(i=0; i< nregistros; i++){
-		// testar se a carona existe
-		// pode haver o registro mas a carona não existir?
+		/*  testar se a carona existe
+		 * pode haver o registro mas a carona não existir? */
 		aux_carona = recuperar_registro(i);
 		aux_chave = malloc(sizeof(Chave_ip));
 		
-		//criar a chave com pk, e rrn
+		/* criar a chave com pk, e rrn */
 		strcpy(aux_chave->pk, aux_carona.pk);
 		
-		// se -1  a chave não existe e deve ser adicionada
-		// se não, entõa a achave existe e é um erro
-		// creio que seja inutil já que o indice esta sendo criado a partir do arquivo
+		/*  se -1  a chave não existe e deve ser adicionada
+		 * se não, entõa a achave existe e é um erro
+		 * creio que seja inutil já que o indice esta sendo criado a partir do arquivo */
 		duplicada = buscar_chave_ip( iprimary->raiz , aux_chave->pk , 0);
 
 
@@ -433,17 +432,17 @@ void criar_iprimary(Indice *iprimary){
 
 }
 
-/* (Re)faz o índice de Caronas  */
-// Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados
+/* (Re)faz o índice de Caronas  
+// Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados */
 void criar_iride(Indice *iride){
 
 }
 
-// Escrever o nó quando já estiver sido encontrado
+/*  Escrever o nó quando já estiver sido encontrado
 // na arvore apenas transcrever pro arquivo
 // já é garantido que é nesse nó que deve ser escrito( e já esta organizado) 
 // salvar é uma chave
-// ip == 1? primario : secundario
+ip == 1? primario : secundario */
 void write_btree(void *salvar, int rrn, char ip){
 	int i, j;
 	char temp[3];
@@ -451,11 +450,11 @@ void write_btree(void *salvar, int rrn, char ip){
 	
 	if(ip == 1){
 		char aux_node[tamanho_registro_ip];
-		// casting no node para o indice certo
+		/* casting no node para o indice certo */
 		node_Btree_ip * salvar_ip;
 		salvar_ip = salvar;
 				
-		//preencher os registro com '#' e '*'
+		/* preencher os registro com '#' e '*' */
 		j = 0;
 		while( j > tamanho_registro_ip - ordem_ip * 3){
 			aux_node[j] = '#';
@@ -470,12 +469,12 @@ void write_btree(void *salvar, int rrn, char ip){
 		strncpy(aux_node, temp, 3);
 
 		for(i = 0; i < salvar_ip->num_chaves;i++){
-			// somar os 3B para o num_chaves + os B das chaves já colocadas
+			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
 			strcpy(aux_node +  3 + i * 14 , salvar_ip->chave[i].pk );
 			
-			//somar + 10 bytes da PK dessa chave
-			//rrn é um inteiro então tem que ser convertido
-			//rrn do arquivo
+			/* somar + 10 bytes da PK dessa chave
+			rrn é um inteiro então tem que ser convertido
+			rrn do arquivo */
 
 			
 			strcpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp );
@@ -484,13 +483,13 @@ void write_btree(void *salvar, int rrn, char ip){
 
 		int aux_ponteiro = 3 + (ordem_ip - 1) * 14;
 		
-		// Salvar se é folha ou não
-		// essa conta do aux_ponteiro tem que ser testada
+		/*  Salvar se é folha ou não
+		// essa conta do aux_ponteiro tem que ser testada */
 		aux_node[aux_ponteiro] = salvar_ip->folha;
 		aux_ponteiro++;
-		//salvar os RRNs das folhas, RRNs tem que estar na posição correta
+		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta */
 
-		// descendentes precisam do tratamento pro casao de não ter o filho da direita
+		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_ip ;i++){
 				sprintf(temp,"%d", salvar_ip->desc[i]);
 				strcpy(aux_node + aux_ponteiro + i * 3, temp);
@@ -503,7 +502,7 @@ void write_btree(void *salvar, int rrn, char ip){
 	else{
 		char aux_node[tamanho_registro_is];
 		
-		//preencher os registro com '#' e '*'
+		/* preencher os registro com '#' e '*' */
 		j = 0;
 		while( j > tamanho_registro_is - ordem_is * 3){
 			aux_node[j] = '#';
@@ -514,24 +513,23 @@ void write_btree(void *salvar, int rrn, char ip){
 			j++;
 		}
 
-		// casting no node para o indice certo
+		/*  casting no node para o indice certo */
 		node_Btree_is * salvar_is;
 		salvar_is = salvar;
 		
-		// o num de chaves já tem que estar atualizado
-		// verificar se sscanf esta funcinando como esperado com o debugger
-		
-		// Salvando numero de chaves
+		/*  o num de chaves já tem que estar atualizado
+		* verificar se sscanf esta funcinando como esperado com o debugger
+		* Salvando numero de chaves */
 		sprintf(temp,"%d", salvar_is->num_chaves);
 		strncpy(aux_node, temp, 3);
 
 		
 		for(i = 0; i < salvar_is->num_chaves;i++){
-			// somar os 3B para o num_chaves + os B das chaves já colocadas
+			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
 			strcpy(aux_node +  3 + i * (10) + i * TAM_STRING_INDICE , salvar_is->chave[i].pk );
 			
-			//somar + 10 bytes da PK dessa chave
-			//chaves já vem formatadas pra no formato DESTINO$AAMMDD$HHMM
+			/* somar + 10 bytes da PK dessa chave
+			* chaves já vem formatadas pra no formato DESTINO$AAMMDD$HHMM */
 			strcpy(aux_node + 3 + (i + 1)*(10) + i * (TAM_STRING_INDICE), salvar_is->chave[i].string );
 	
 		}
@@ -539,12 +537,12 @@ void write_btree(void *salvar, int rrn, char ip){
 		
 		int aux_ponteiro = 3 + (ordem_is - 1) * 51;
 		
-		// Salvar se é folha ou não
-		// essa conta do aux_ponteiro tem que ser testada
+		/* Salvar se é folha ou não
+		 essa conta do aux_ponteiro tem que ser testada */
 		aux_node[aux_ponteiro] = salvar_is->folha;
 		aux_ponteiro++;
 		
-		// descendentes precisam do tratamento pro casao de não ter o filho da direita
+		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_is ;i++){
 				sprintf(temp,"%d", salvar_is->desc[i]);
 				strcpy(aux_node + aux_ponteiro + i * 3, temp);
@@ -555,10 +553,10 @@ void write_btree(void *salvar, int rrn, char ip){
 
 }
 
-/*Lê um nó do arquivo de índice e retorna na estrutura*/
+/*Lê um nó do arquivo de índice e retorna na estrutura
 // o ponteiro retorno já tem que ter sido alocado com a estrutura certa.
-// ip == 1? primario : secundario
-void *read_btree( void * retorno, int rrn, int ip){
+// ip == 1? primario : secundario */
+void * read_btree( void * retorno, int rrn, int ip){
 
 	if(ip == 1){
 		
@@ -569,41 +567,41 @@ void *read_btree( void * retorno, int rrn, int ip){
 		retorno_ip = retorno;
 		Chave_ip * aux_chave;
 		
-		//vetor de chaves vai ser allocado dinamicamente com todas as posições
+		/* vetor de chaves vai ser allocado dinamicamente com todas as posições */
 		retorno_ip->chave =  malloc(sizeof(Chave_ip *) * (ordem_ip-1) );
-		//vetor de destinos também vai ser alocado dinamicamente com todas posições
+		/* vetor de destinos também vai ser alocado dinamicamente com todas posições */
 		retorno_ip->desc =  malloc(sizeof(int) * (ordem_ip));
 
 		strcpy(aux_node, ARQUIVO_IS + (rrn) * tamanho_registro_ip);
 
-		// Num de chaves tem que ser convertido pra int
+		/*  Num de chaves tem que ser convertido pra int */
 		strncpy(temp, aux_node,3);
 		sscanf(temp, "%d", &retorno_ip->num_chaves);
 
 		for(i = 0; i < retorno_ip->num_chaves;i++){
-			// somar os 3B para o num_chaves + os B das chaves já colocadas
+			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
 			aux_chave = malloc(sizeof(Chave_ip));
 			strcpy(aux_chave->pk ,aux_node +  3 + i * 14);
 			
 			
-			//somar + 10 bytes da PK dessa chave
-			//rrn é um inteiro então tem que ser convertido
+			/* somar + 10 bytes da PK dessa chave
+			*rrn é um inteiro então tem que ser convertido */
 			strcpy(temp, aux_node + 3 + (i + 1)*(10) + i * 4);
 			sscanf(temp, "%d", &aux_chave->rrn);
 
-			// pode dar problema aqui
+			/*  pode dar problema aqui */
 			retorno_ip->chave[i] = * aux_chave;
 		}
 
 		int aux_ponteiro = 3 + (ordem_ip - 1) * 14;
 		
-		// Salvar se é folha ou não
-		// essa conta do aux_ponteiro tem que ser testada
+		/*  Salvar se é folha ou não
+		* essa conta do aux_ponteiro tem que ser testada */
 		retorno_ip->folha = aux_node[aux_ponteiro];
 		aux_ponteiro++; 
 
-		//salvar os RRNs das folhas, RRNs tem que estar na posição correta
-		// descendentes precisam do tratamento pro casao de não ter o filho da direita
+		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta
+		* descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_ip ;i++){
 				
 				strcpy(temp, aux_node + aux_ponteiro + i * 3);
@@ -620,39 +618,39 @@ void *read_btree( void * retorno, int rrn, int ip){
 		Chave_is * aux_chave;
 		int i = 0;
 		
-		//vetor de chaves vai ser allocado dinamicamente com todas as posições
+		/* vetor de chaves vai ser allocado dinamicamente com todas as posições */
 		retorno_is->chave =  malloc(sizeof(Chave_is *) * (ordem_is-1) );
-		//vetor de destinos também vai ser alocado dinamicamente com todas posições
+		/* vetor de destinos também vai ser alocado dinamicamente com todas posições */
 		retorno_is->desc =  malloc(sizeof(int) * (ordem_is));
 
 		strcpy(aux_node, ARQUIVO_IS + (rrn) * tamanho_registro_is);
 		
-		//num de chaves tem que ser convertido pra int
+		/* num de chaves tem que ser convertido pra int */
 		strncpy(temp, aux_node,3);
 		sscanf(temp, "%d" ,  &retorno_is->num_chaves);
 
 
 		for(i = 0; i < retorno_is->num_chaves;i++){
-			// somar os 3B para o num_chaves + os B das chaves já colocadas
+			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
 			aux_chave = malloc(sizeof(Chave_is));
 			strcpy(aux_chave->pk ,aux_node +  3 + i * (10) + i * TAM_STRING_INDICE);
 			
 			
-			//somar + 10 bytes da PK dessa chave
+			/* somar + 10 bytes da PK dessa chave */
 			strcpy(aux_chave->string, aux_node +  3 + (i+1) * (10) + i * TAM_STRING_INDICE);
 
-			// pode dar problema aqui
+			/*  pode dar problema aqui */
 			retorno_is->chave[i] = * aux_chave;
 		}
 
 		int aux_ponteiro = 3 + (ordem_is - 1)* 51;
-		// Salvar se é folha ou não
-		// essa conta do aux_ponteiro tem que ser testada
+		/*  Salvar se é folha ou não
+		 essa conta do aux_ponteiro tem que ser testada */
 		retorno_is->folha = aux_node[aux_ponteiro];
 		aux_ponteiro++; 
 
-		//salvar os RRNs das folhas, RRNs tem que estar na posição correta
-		// descendentes precisam do tratamento pro casao de não ter o filho da direita
+		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta
+		 descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i <= retorno_is->num_chaves ;i++){
 				
 				strcpy(temp, aux_node + aux_ponteiro + i * 3);
@@ -660,22 +658,19 @@ void *read_btree( void * retorno, int rrn, int ip){
 		}
 	
 	}
-	
-
-
 }
 /* Percorre a arvore e retorna o RRN da chave informada.  Retorna -1, caso não
- * encontrada. */
-// 3 param: 1 exibir caminho, 0 não
+ * encontrada. 
+ * 3 param: 1 exibir caminho, 0 não */
 int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho){
 	
 	int i = 1;
 	
-	//recuperar nó
+	/* recuperar nó */
 	node_Btree_ip * aux_node = malloc(sizeof(node_Btree_ip));
 	read_btree( aux_node, noderrn, 1);
 
-	//imprimir a caminho
+	/* imprimir a caminho */
 	while( i <= aux_node->num_chaves && 0 < strcmp( pk, aux_node->chave[i-1].pk)){
 		if(exibir_caminho)
 			printf("%s ",aux_node->chave[i-1].pk);	
@@ -688,7 +683,7 @@ int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho){
 	if(aux_node->folha)
 		return -1;
 	else
-		buscar_chave_ip( aux_node->desc[i-1] , pk, exibir_caminho);
+		return buscar_chave_ip( aux_node->desc[i-1] , pk, exibir_caminho);
 }
 
 char * buscar_chave_is(const int noderrn, const char *titulo, const int exibir_caminho){
@@ -709,7 +704,6 @@ char * buscar_chave_is(const int noderrn, const char *titulo, const int exibir_c
 	else{
 		return buscar_chave_is(aux_node->desc[i-1], titulo, exibir_caminho);
 	}
-	
 }
 
 void cadastrar(Indice *iprimary, Indice *iride){
@@ -725,5 +719,5 @@ void buscar(Indice iprimary, Indice iride){
 }
 
 void listar(Indice iprimary, Indice iride){
-	
+
 }
