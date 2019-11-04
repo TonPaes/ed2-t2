@@ -123,7 +123,7 @@ int tamanho_registro_is;
 
 /* Recebe do usuário uma string simulando o arquivo completo e retorna o número
   * de registros. */
-// (feita)
+// done
 int carregar_arquivo();
 
 /* (Re)faz o Cria iprimary*/
@@ -134,12 +134,12 @@ void criar_iride(Indice *iride);
 
 /*Escreve um nó da árvore no arquivo de índice,
 * O terceiro parametro serve para informar qual indice se trata */
-// (feita)
+// done
 void write_btree(void *salvar, int rrn, char ip);
 
 /*Lê um nó do arquivo de índice e retorna na estrutura*/
 // adcionei um ponteiro por onde vou retornar a struc, senguindo o padrão da função write_btree
-// (feita)
+// done
 void *read_btree(void * retorno, int rrn, int ip);
 
 /* Aloca dinamicamente os vetores de chaves e descendentes */
@@ -148,10 +148,12 @@ void *criar_no(char ip);
 
 /* Percorre a arvore e retorna o RRN da chave informada.  Retorna -1, caso não
  * encontrada. */
+// done
 int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho);
 
 /* Percorre a arvore e retorna a pk da string destino/data-hora informada. Retorna -1, caso não
  * encontrada. */
+// done
 char *buscar_chave_is(const int noderrn, const char *titulo, const int exibir_caminho);
 
 /* Realiza percurso em-ordem imprimindo todas as caronas na ordem lexicografica do destino e data/hora e o
@@ -159,6 +161,7 @@ char *buscar_chave_is(const int noderrn, const char *titulo, const int exibir_ca
 int imprimir_arvore_is(int noderrn, int nivel);
 
 /*Gera Chave da struct Carona*/
+//done
 void gerarChave(Carona *novo);
 
 /* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
@@ -176,6 +179,7 @@ int imprimir_arvore_ip(int noderrn, int nivel);
 
 /* Recupera do arquivo o registro com o rrn informado e retorna os dados na
  * struct Carona */
+// done
 Carona recuperar_registro(int rrn);
 
 /********************FUNÇÕES DO MENU*********************/
@@ -240,26 +244,26 @@ int main()
 		switch (opcao)
 		{
 		case 1: /* Cadastrar uma nova Carona */
-		//	cadastrar(&iprimary, &iride);
+			cadastrar(&iprimary, &iride);
 			break;
 		case 2: /* Alterar a qtd de vagas de uma Carona */
-		//	printf(INICIO_ALTERACAO);
-		//	if (alterar(iprimary))
-		//		printf(SUCESSO);
-		//	else
-		//		printf(FALHA);
+			printf(INICIO_ALTERACAO);
+			if (alterar(iprimary))
+				printf(SUCESSO);
+			else
+				printf(FALHA);
 			break;
 		case 3: /* Buscar uma Carona */
-		//	printf(INICIO_BUSCA);
-		//	buscar(iprimary, iride);
+			printf(INICIO_BUSCA);
+			buscar(iprimary, iride);
 			break;
 		case 4: /* Listar todos as Caronas */
-		//	printf(INICIO_LISTAGEM);
-		//	listar(iprimary, iride);
+			printf(INICIO_LISTAGEM);
+			listar(iprimary, iride);
 			break;
 		case 5: /* Imprimir o arquivo de dados */
-		//	printf(INICIO_ARQUIVO);
-		//	printf("%s\n", (*ARQUIVO != '\0') ? ARQUIVO : ARQUIVO_VAZIO);
+			printf(INICIO_ARQUIVO);
+			printf("%s\n", (*ARQUIVO != '\0') ? ARQUIVO : ARQUIVO_VAZIO);
 			break;
 		case 6: /* Imprime o Arquivo de Índice Primário*/
 			printf(INICIO_INDICE_PRIMARIO);
@@ -282,7 +286,7 @@ int main()
 					fwrite(p, 1, tamanho_registro_is, stdout);
 					puts("");
 				}
-			//printf("%s\n", ARQUIVO_IS);
+			printf("%s\n", ARQUIVO_IS);
 			break;
 		case 8: /*Libera toda memória alocada dinâmicamente (se ainda houver) e encerra*/
 			return 0;
@@ -406,6 +410,7 @@ void criar_iprimary(Indice *iprimary){
 	int i;
 	Carona aux_carona;
 	Chave_ip * aux_chave;
+	int duplicada = -1;
 	//ler todas as caronas do arquivo
 	for(i=0; i< nregistros; i++){
 		// testar se a carona existe
@@ -419,9 +424,9 @@ void criar_iprimary(Indice *iprimary){
 		// se -1  a chave não existe e deve ser adicionada
 		// se não, entõa a achave existe e é um erro
 		// creio que seja inutil já que o indice esta sendo criado a partir do arquivo
-		aux_chave = buscar_chave_ip( iprimary->raiz , aux_chave->pk , 0);
+		duplicada = buscar_chave_ip( iprimary->raiz , aux_chave->pk , 0);
 
-		
+
 	}
 
 	
@@ -670,14 +675,55 @@ int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho){
 	node_Btree_ip * aux_node = malloc(sizeof(node_Btree_ip));
 	read_btree( aux_node, noderrn, 1);
 
-	while( i <= aux_node->num_chaves && 0 < strcmp( pk, aux_node->chave[i].pk))
+	//imprimir a caminho
+	while( i <= aux_node->num_chaves && 0 < strcmp( pk, aux_node->chave[i-1].pk)){
+		if(exibir_caminho)
+			printf("%s ",aux_node->chave[i-1].pk);	
 		i++;
+	}
 	
 	if( i <= aux_node->num_chaves && 0 == strcmp(pk, aux_node->chave[i].pk))
-		return aux_node->chave[i].rrn;
+		return aux_node->chave[i-1].rrn;
 
 	if(aux_node->folha)
 		return -1;
 	else
-		buscar_chave_ip( aux_node->desc[i] , pk, exibir_caminho);
+		buscar_chave_ip( aux_node->desc[i-1] , pk, exibir_caminho);
+}
+
+char * buscar_chave_is(const int noderrn, const char *titulo, const int exibir_caminho){
+	int i = 1;
+	node_Btree_is * aux_node = malloc(sizeof(node_Btree_is));
+	read_btree(aux_node, noderrn, 0);
+
+	while( i <= aux_node->num_chaves && 0 < strcmp(titulo, aux_node->chave[i-1].string)){
+		if(exibir_caminho)
+			printf("%s ",aux_node->chave[i-1].string);
+		i++;
+	}
+	if(i <= aux_node->num_chaves && 0 == strcmp(titulo, aux_node->chave[i-1].string))
+		return aux_node->chave[i-1].pk;
+	
+	if(aux_node->folha)
+		return "-1";
+	else{
+		return buscar_chave_is(aux_node->desc[i-1], titulo, exibir_caminho);
+	}
+	
+}
+
+void cadastrar(Indice *iprimary, Indice *iride){
+
+}
+
+int alterar(Indice iprimary){
+	return -1;
+}
+
+void buscar(Indice iprimary, Indice iride){
+
+}
+
+void listar(Indice iprimary, Indice iride){
+	
 }
