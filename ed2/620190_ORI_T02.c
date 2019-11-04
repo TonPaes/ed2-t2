@@ -405,12 +405,18 @@ void gerarChave(Carona *novo){
 void criar_iprimary(Indice *iprimary){
 	int i;
 	Carona aux_carona;
+	Chave_ip * aux_chave;
 	//ler todas as caronas do arquivo
 	for(i=0; i< nregistros; i++){
 		// testar se a carona existe
 		// pode haver o registro mas a carona não existir?
-		// TA WORKANDO?
 		aux_carona = recuperar_registro(i);
+		aux_chave = malloc(sizeof(Chave_ip));
+		
+		//criar a chave com pk, e rrn
+		strcpy(aux_chave->pk, aux_carona.pk);
+		aux_chave->rrn = i;
+
 
 	}
 	
@@ -450,7 +456,7 @@ void write_btree(void *salvar, int rrn, char ip){
 			j++;
 		}
 
-		sscanf(temp,"%d", &salvar_ip->num_chaves);
+		sprintf(temp,"%d", salvar_ip->num_chaves);
 		strncpy(aux_node, temp, 3);
 
 		for(i = 0; i < salvar_ip->num_chaves;i++){
@@ -461,7 +467,7 @@ void write_btree(void *salvar, int rrn, char ip){
 			//rrn é um inteiro então tem que ser convertido
 			//rrn do arquivo
 
-			sscanf(temp,"%d", &salvar_ip->num_chaves);
+			
 			strcpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp );
 	
 		}
@@ -476,8 +482,8 @@ void write_btree(void *salvar, int rrn, char ip){
 
 		// descendentes precisam do tratamento pro casao de não ter o filho da direita
 		for(i = 0; i < ordem_ip ;i++){
-				sscanf(temp,"%d", &salvar_ip->desc[i]);
-				(aux_node + aux_ponteiro + i * 3, temp);
+				sprintf(temp,"%d", salvar_ip->desc[i]);
+				strcpy(aux_node + aux_ponteiro + i * 3, temp);
 
 		}
 
@@ -506,7 +512,7 @@ void write_btree(void *salvar, int rrn, char ip){
 		// verificar se sscanf esta funcinando como esperado com o debugger
 		
 		// Salvando numero de chaves
-		sscanf(temp,"%d", &salvar_is->num_chaves);
+		sprintf(temp,"%d", salvar_is->num_chaves);
 		strncpy(aux_node, temp, 3);
 
 		
@@ -530,7 +536,7 @@ void write_btree(void *salvar, int rrn, char ip){
 		
 		// descendentes precisam do tratamento pro casao de não ter o filho da direita
 		for(i = 0; i < ordem_is ;i++){
-				sscanf(temp,"%d", &salvar_is->desc[i]);
+				sprintf(temp,"%d", salvar_is->desc[i]);
 				strcpy(aux_node + aux_ponteiro + i * 3, temp);
 		}
 
@@ -562,7 +568,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 
 		// Num de chaves tem que ser convertido pra int
 		strncpy(temp, aux_node,3);
-		sscanf(retorno_ip->num_chaves,"%d", &temp);
+		sscanf(temp, "%d", &retorno_ip->num_chaves);
 
 		for(i = 0; i < retorno_ip->num_chaves;i++){
 			// somar os 3B para o num_chaves + os B das chaves já colocadas
@@ -573,7 +579,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 			//somar + 10 bytes da PK dessa chave
 			//rrn é um inteiro então tem que ser convertido
 			strcpy(temp, aux_node + 3 + (i + 1)*(10) + i * 4);
-			sscanf(aux_chave->rrn, "%d", &temp);
+			sscanf(temp, "%d", &aux_chave->rrn);
 
 			// pode dar problema aqui
 			retorno_ip->chave[i] = * aux_chave;
@@ -591,7 +597,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 		for(i = 0; i < ordem_ip ;i++){
 				
 				strcpy(temp, aux_node + aux_ponteiro + i * 3);
-				sscanf(retorno_ip->desc[i], "%d", &temp);
+				sscanf(temp, "%d",  &retorno_ip->desc[i]);
 		}
 
 
@@ -613,7 +619,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 		
 		//num de chaves tem que ser convertido pra int
 		strncpy(temp, aux_node,3);
-		sscanf(retorno_is->num_chaves,"%d", temp);
+		sscanf(temp, "%d" ,  &retorno_is->num_chaves);
 
 
 		for(i = 0; i < retorno_is->num_chaves;i++){
@@ -623,9 +629,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 			
 			
 			//somar + 10 bytes da PK dessa chave
-			//rrn é um inteiro então tem que ser convertido
-			strcpy(temp, aux_node +  3 + i * (10) + i * TAM_STRING_INDICE);
-			sscanf(aux_chave->string, "%d", &temp);
+			strcpy(aux_chave->string, aux_node +  3 + (i+1) * (10) + i * TAM_STRING_INDICE);
 
 			// pode dar problema aqui
 			retorno_is->chave[i] = * aux_chave;
@@ -642,7 +646,7 @@ void *read_btree( void * retorno, int rrn, int ip){
 		for(i = 0; i <= retorno_is->num_chaves ;i++){
 				
 				strcpy(temp, aux_node + aux_ponteiro + i * 3);
-				sscanf(retorno_is->desc[i], "%d", &temp);
+				sscanf(temp,"%d", &retorno_is->desc[i]);
 		}
 	
 	}
