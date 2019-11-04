@@ -409,6 +409,7 @@ void criar_iprimary(Indice *iprimary){
 	for(i=0; i< nregistros; i++){
 		// testar se a carona existe
 		// pode haver o registro mas a carona não existir?
+		// TA WORKANDO?
 		aux_carona = recuperar_registro(i);
 
 	}
