@@ -415,10 +415,15 @@ void criar_iprimary(Indice *iprimary){
 		
 		//criar a chave com pk, e rrn
 		strcpy(aux_chave->pk, aux_carona.pk);
-		aux_chave->rrn = i;
+		
+		// se -1  a chave não existe e deve ser adicionada
+		// se não, entõa a achave existe e é um erro
+		// creio que seja inutil já que o indice esta sendo criado a partir do arquivo
+		aux_chave = buscar_chave_ip( iprimary->raiz , aux_chave->pk , 0);
 
-
+		
 	}
+
 	
 
 }
@@ -653,4 +658,26 @@ void *read_btree( void * retorno, int rrn, int ip){
 	
 
 
+}
+/* Percorre a arvore e retorna o RRN da chave informada.  Retorna -1, caso não
+ * encontrada. */
+// 3 param: 1 exibir caminho, 0 não
+int buscar_chave_ip(int noderrn, char *pk, int exibir_caminho){
+	
+	int i = 1;
+	
+	//recuperar nó
+	node_Btree_ip * aux_node = malloc(sizeof(node_Btree_ip));
+	read_btree( aux_node, noderrn, 1);
+
+	while( i <= aux_node->num_chaves && 0 < strcmp( pk, aux_node->chave[i].pk))
+		i++;
+	
+	if( i <= aux_node->num_chaves && 0 == strcmp(pk, aux_node->chave[i].pk))
+		return aux_node->chave[i].rrn;
+
+	if(aux_node->folha)
+		return -1;
+	else
+		buscar_chave_ip( aux_node->desc[i] , pk, exibir_caminho);
 }
