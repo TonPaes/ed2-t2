@@ -126,9 +126,11 @@ int tamanho_registro_is;
  *done */
 int carregar_arquivo();
 
-/* (Re)faz o Cria iprimary*/
+/* (Re)faz o Cria iprimary
+doing*/
 void criar_iprimary(Indice *iprimary);
-/* (Re)faz o índice de Caronas  */
+/* (Re)faz o índice de Caronas 
+doing */
 void criar_iride(Indice *iride);
 
 /*Escreve um nó da árvore no arquivo de índice,
@@ -165,7 +167,8 @@ void gerarChave(Carona *novo);
 
 /* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
  * entre os nós esq e dir. Retorna o novo nó à direita, a chave promovida e seu
- * descendente direito, que pode ser nulo, caso a nó seja folha. */
+ * descendente direito, que pode ser nulo, caso a nó seja folha. 
+ * done*/
 int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn);
 int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn);
 
@@ -200,12 +203,14 @@ void ler_entrada(char *registro, Carona *novo);
 /* Atualiza os dois índices com o novo registro inserido */
 void inserir_registro_indices(Indice *iprimary, Indice *iride, Carona j);
 
-/* Insere um novo registro na Árvore B */
+/* Insere um novo registro na Árvore B
+done */
 void insere_chave_ip(Indice *iprimary, Chave_ip chave);
 void insere_chave_is(Indice *iride, Chave_is chave);
 
 /* Função auxiliar para ser chamada recursivamente, inserir as novas chaves nas
- * folhas e tratar overflow no retorno da recursão. */
+ * folhas e tratar overflow no retorno da recursão.
+ * done */
 int insere_aux_ip(int noderrn,  Chave_ip * chave);
 int insere_aux_is(int noderrn, Chave_is *chave);
 
@@ -416,7 +421,7 @@ void criar_iprimary(Indice *iprimary){
 		aux_carona = recuperar_registro(i);
 		aux_chave = malloc(sizeof(Chave_ip));
 		
-		/* criar a chave com pk, e rrn */
+		/* criar a chave com pk, e titulo */
 		strcpy(aux_chave->pk, aux_carona.pk);
 		aux_chave->rrn = i;
 		
@@ -962,7 +967,7 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	write_btree(new_node, nregistrosip, '1');
 
 	/* nregistros vai ser o rrn do filho_direito*/
-	return nregistrosip;
+	return nregistrosip - 1;
 	/* tem que retornar o RRN no new_node quando ele for escrito no indice*/
 }
 int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
@@ -1008,6 +1013,6 @@ int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
 	write_btree(new_node, nregistrosip, '0');
 
 	/* nregistros vai ser o rrn do filho_direito*/
-	return nregistrosis;
+	return nregistrosis - 1 ;
 	/* tem que retornar o RRN no new_node quando ele for escrito no indice*/
 }
