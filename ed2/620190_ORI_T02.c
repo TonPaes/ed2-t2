@@ -206,7 +206,7 @@ void insere_chave_is(Indice *iride, Chave_is chave);
 
 /* Função auxiliar para ser chamada recursivamente, inserir as novas chaves nas
  * folhas e tratar overflow no retorno da recursão. */
-int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave);
+int insere_aux_ip(int noderrn,  Chave_ip * chave);
 int insere_aux_is(int noderrn, Chave_is *chave);
 
 /* VOCÊS NÃO NECESSARIAMENTE PRECISAM USAR TODAS ESSAS FUNÇÕES, É MAIS PARA TEREM UMA BASE MESMO, 
@@ -739,8 +739,8 @@ void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 		
 	}else{
 		/* chave vai ser o filho direito no retorno*/
-		int filho_direito = insere_aux_ip(iprimary->raiz, chave_promovida, &chave);
-		if(chave_promovida != NULL){
+		int filho_direito = insere_aux_ip(iprimary->raiz, &chave);
+		if(filho_direito != -1){
 			aux_node->folha = 'F';
 			aux_node->num_chaves++;
 			aux_node->chave[0] = * chave_promovida;
@@ -761,7 +761,7 @@ void insere_chave_is(Indice *iride, Chave_is chave){
  * folhas e tratar overflow no retorno da recursão. 
  * 0 sem problemas, 1 overflow, -1 erro
  * nope, o retorno aqui tem que ser o RRN*/
-int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave){
+int insere_aux_ip(int noderrn,  Chave_ip * chave){
 	int i;
 	int filho_direita;
 	node_Btree_ip * aux_node = malloc(sizeof(node_Btree_ip));
@@ -779,9 +779,9 @@ int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave){
 			}
 			aux_node->chave[i] = * chave;
 			aux_node->num_chaves++;
-			chave_promovida = NULL;
+			chave = NULL;
 			
-			return noderrn;
+			return -1;
 		}else
 		{
 			return divide_no_ip(noderrn, chave, -1);
@@ -793,11 +793,31 @@ int insere_aux_ip(int noderrn, Chave_ip *chave_promovida, Chave_ip * chave){
 			i--;
 		i++;
 		/* Quando não encontra*/
-		filho_direita = insere_aux_ip(aux_node->desc[i], chave_promovida, chave);
-		chave_promovida = chave;
+		filho_direita = insere_aux_ip(aux_node->desc[i], chave);
+
+		if(filho_direita != -1){
+			
+			if(aux_node->num_chaves < ordem_ip -1){
+				i = aux_node->num_chaves;
+				while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk)){
+					aux_node->desc[i] = aux_node->desc[i+1];
+					aux_node->chave[i] = aux_node->chave[i+1];
+					i--;
+				}
+				aux_node->chave[i] = * chave;
+				aux_node->desc[i] = filho_direita;
+				aux_node->num_chaves++;
+				chave = NULL;
+				return -1;
+			
+			}else{
+				return divide_no_ip(noderrn, chave, filho_direita);
+			}
+		
+		}else
+			/*caso onde da merda*/
+			return -1;
 	}
-	/*caso onde da merda*/
-	return -1;
 }
 
 
