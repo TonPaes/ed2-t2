@@ -409,9 +409,8 @@ void criar_iprimary(Indice *iprimary){
 	int i;
 	Carona aux_carona;
 	Chave_ip * aux_chave;
-	int duplicada = -1;
 	/* ler todas as caronas do arquivo */
-	for(i=0; i< nregistros; i++){
+	for(i=0; i < nregistros; i++){
 		/*  testar se a carona existe
 		 * pode haver o registro mas a carona não existir? */
 		aux_carona = recuperar_registro(i);
@@ -419,20 +418,30 @@ void criar_iprimary(Indice *iprimary){
 		
 		/* criar a chave com pk, e rrn */
 		strcpy(aux_chave->pk, aux_carona.pk);
+		aux_chave->rrn = i;
 		
-		insere_chave_ip(&iprimary, * aux_chave);
-
-
+		insere_chave_ip( iprimary, * aux_chave);
 	}
-
-	
-
 }
 
 /* (Re)faz o índice de Caronas  
 // Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados */
 void criar_iride(Indice *iride){
-
+	int i;
+	Carona aux_carona;
+	Chave_is * aux_chave;
+	/* ler todas as caronas do arquivo */
+	for(i=0; i < nregistros; i++){
+		/*  testar se a carona existe
+		 * pode haver o registro mas a carona não existir? */
+		aux_carona = recuperar_registro(i);
+		aux_chave = malloc(sizeof(Chave_is));
+		
+		/* criar a chave com pk, e rrn */
+		strcpy(aux_chave->pk, aux_carona.pk);
+		
+		insere_chave_is( iride, * aux_chave);
+	}
 }
 
 /*  Escrever o nó quando já estiver sido encontrado
@@ -729,13 +738,12 @@ void listar(Indice iprimary, Indice iride){
 void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 	
 	node_Btree_ip * aux_node = malloc(sizeof( node_Btree_ip));
-	Chave_ip * chave_promovida = malloc(sizeof(Chave_ip));
 
 	if( iprimary->raiz == NULL){
 		aux_node->chave[0] = chave;
 		aux_node->num_chaves++;
 		aux_node->folha = 'T';
-		write_btree(aux_node, nregistrosip, 1);
+		write_btree(aux_node, nregistrosip, '1');
 		iprimary->raiz = 0;
 		
 	}else{
@@ -744,10 +752,10 @@ void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 		if(filho_direito != -1){
 			aux_node->folha = 'F';
 			aux_node->num_chaves++;
-			aux_node->chave[0] = * chave_promovida;
+			aux_node->chave[0] = chave;
 			aux_node->desc[0] = iprimary->raiz;
 			aux_node->desc[1] = filho_direito;
-			iprimary->raiz = nregistros;
+			iprimary->raiz = nregistrosip;
 			write_btree(aux_node, nregistrosip, '1');			
 		}
 	}
@@ -755,7 +763,30 @@ void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 
 }
 void insere_chave_is(Indice *iride, Chave_is chave){
+	
+	node_Btree_is * aux_node = malloc(sizeof( node_Btree_is));
 
+	if( iride->raiz == NULL){
+		aux_node->chave[0] = chave;
+		aux_node->num_chaves++;
+		aux_node->folha = 'T';
+		write_btree(aux_node, nregistrosis, '0');
+		iride->raiz = 0;
+		
+	}else{
+		/* chave vai ser o filho direito no retorno*/
+		int filho_direito = insere_aux_is(iride->raiz, &chave);
+		if(filho_direito != -1){
+			aux_node->folha = 'F';
+			aux_node->num_chaves++;
+			aux_node->chave[0] =  chave;
+			aux_node->desc[0] = iride->raiz;
+			aux_node->desc[1] = filho_direito;
+			iride->raiz = nregistrosis;
+			write_btree(aux_node, nregistrosis, '0');			
+			
+		}
+	}
 }
 
 /* Função auxiliar para ser chamada recursivamente, inserir as novas chaves nas
@@ -825,7 +856,64 @@ int insere_aux_ip(int noderrn,  Chave_ip * chave){
 
 
 int insere_aux_is(int noderrn, Chave_is *chave){
-	return -1;
+	int i;
+	int filho_direita;
+	node_Btree_is * aux_node = malloc(sizeof(node_Btree_is));
+	/* um monte de duvida sobre como segurar o rrn*/
+	read_btree(aux_node, noderrn, 0);
+	
+	if(aux_node->folha == 'T'){
+		
+		if(aux_node->num_chaves < ordem_is -1){
+			i = aux_node->num_chaves;
+			
+			while( i > 0 && 0 < strcmp(chave->string, aux_node->chave[i].string)){
+				aux_node->chave[i] = aux_node->chave[i+1];
+				i--;
+			}
+			aux_node->chave[i] = * chave;
+			aux_node->num_chaves++;
+			write_btree(aux_node, noderrn, '0');
+			chave = NULL;
+			
+			return -1;
+		}else
+		{
+			return divide_no_is(noderrn, chave, -1);
+		}
+	}else
+	{
+		i = aux_node->num_chaves;
+		while( i > 0 && 0 < strcmp(chave->string, aux_node->chave[i].string))
+			i--;
+		i++;
+		/* Quando não encontra*/
+		filho_direita = insere_aux_is(aux_node->desc[i], chave);
+
+		if(filho_direita != -1){
+			
+			if(aux_node->num_chaves < ordem_ip -1){
+				i = aux_node->num_chaves;
+				while( i > 0 && 0 < strcmp(chave->string, aux_node->chave[i].string)){
+					aux_node->desc[i] = aux_node->desc[i+1];
+					aux_node->chave[i] = aux_node->chave[i+1];
+					i--;
+				}
+				aux_node->chave[i] = * chave;
+				aux_node->desc[i] = filho_direita;
+				aux_node->num_chaves++;
+				write_btree(aux_node, noderrn, '0');
+				chave = NULL;
+				return -1;
+			
+			}else{
+				return divide_no_is(noderrn, chave, filho_direita);
+			}
+		
+		}else
+			/*caso onde da merda*/
+			return -1;
+	}
 }
 
 /* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
@@ -872,11 +960,54 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	aux_node->num_chaves = i;
 	
 	write_btree(new_node, nregistrosip, '1');
-	
+
 	/* nregistros vai ser o rrn do filho_direito*/
 	return nregistrosip;
 	/* tem que retornar o RRN no new_node quando ele for escrito no indice*/
 }
 int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
-	return -1;
+	int i = 0, j = 0;
+	int chave_alocada = 0;
+	/* recuperando o nó que vai ser dividido */
+	node_Btree_is * aux_node = malloc(sizeof(node_Btree_is));
+	node_Btree_is *  new_node = malloc(sizeof(node_Btree_is));
+	read_btree(aux_node, rrnesq, 0);
+	
+	i = aux_node->num_chaves;
+	new_node->folha = aux_node->folha;
+	new_node->num_chaves = ordem_is/2;
+
+	for(j = new_node->num_chaves; j > 0; j--){
+		if( !chave_alocada && 0 < strcmp(chave->string, aux_node->chave[i-1].string)){
+			new_node->chave[j-1] = * chave;
+			new_node->desc[j] = desc_dir_rrn;
+			chave_alocada = 1;
+		}else
+		{
+			new_node->chave[j-1] = aux_node->chave[i-1];
+			new_node->desc[j] = aux_node->desc[i];
+			i--;
+		}
+	}
+
+	if(!chave_alocada){
+		while (i >= 1 && 0 < strcmp(chave->string, aux_node->chave[i-1].string) ){
+			aux_node->chave[i] = aux_node->chave[i-1];
+			aux_node->desc[i+1] = aux_node->desc[i];
+		}
+		aux_node->chave[i] = *chave;
+		aux_node->desc[i+1] = desc_dir_rrn;
+	}
+	i = (ordem_is/2);
+
+	/*chave é o nó promovido*/
+	* chave = aux_node->chave[i];
+	new_node->desc[0] = aux_node->desc[i+1];
+	aux_node->num_chaves = i;
+	
+	write_btree(new_node, nregistrosip, '0');
+
+	/* nregistros vai ser o rrn do filho_direito*/
+	return nregistrosis;
+	/* tem que retornar o RRN no new_node quando ele for escrito no indice*/
 }
