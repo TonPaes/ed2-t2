@@ -127,10 +127,10 @@ int tamanho_registro_is;
 int carregar_arquivo();
 
 /* (Re)faz o Cria iprimary
-doing*/
+doine*/
 void criar_iprimary(Indice *iprimary);
 /* (Re)faz o índice de Caronas 
-doing */
+doine */
 void criar_iride(Indice *iride);
 
 /*Escreve um nó da árvore no arquivo de índice,
@@ -164,7 +164,7 @@ int imprimir_arvore_is(int noderrn, int nivel);
 /*Gera Chave da struct Carona
 * done */
 void gerarChave(Carona *novo);
-
+char * gerarTitulo( Carona j);
 /* Função auxiliar que ordena as chaves em esq + a chave a ser inserida e divide
  * entre os nós esq e dir. Retorna o novo nó à direita, a chave promovida e seu
  * descendente direito, que pode ser nulo, caso a nó seja folha. 
@@ -217,6 +217,7 @@ int insere_aux_is(int noderrn, Chave_is *chave);
 /* VOCÊS NÃO NECESSARIAMENTE PRECISAM USAR TODAS ESSAS FUNÇÕES, É MAIS PARA TEREM UMA BASE MESMO, 
  * PODEM CRIAR SUAS PRÓPRIAS FUNÇÕES SE PREFERIREM */
 
+
 int main()
 {
 	char *p; /* # */
@@ -234,10 +235,12 @@ int main()
 
 	/* Índice primário */
 	Indice iprimary;
+	iprimary.raiz = -1;
 	criar_iprimary(&iprimary);
 
 	/* Índice secundário de nomes dos Caronas */
 	Indice iride;
+	iride.raiz = -1;
 	criar_iride(&iride);
 
 	/* Execução do programa */
@@ -408,6 +411,18 @@ void gerarChave(Carona *novo){
 	novo->pk[10] = '\0'; 
 }
 
+char * gerarTitulo( Carona j){
+	char titulo[52];
+	char * aux;
+	aux = strtok(titulo, "|");
+	while(aux != NULL){
+		aux = strtok(NULL, "|");
+		strcpy(titulo, aux);
+	}
+
+	return titulo;
+}
+
 /* (Re)faz o Cria iprimary
 * Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados */
 void criar_iprimary(Indice *iprimary){
@@ -435,6 +450,7 @@ void criar_iride(Indice *iride){
 	int i;
 	Carona aux_carona;
 	Chave_is * aux_chave;
+	char * aux_titulo;
 	/* ler todas as caronas do arquivo */
 	for(i=0; i < nregistros; i++){
 		/*  testar se a carona existe
@@ -444,7 +460,8 @@ void criar_iride(Indice *iride){
 		
 		/* criar a chave com pk, e rrn */
 		strcpy(aux_chave->pk, aux_carona.pk);
-		
+		aux_titulo = gerarTitulo(aux_carona);
+		strcpy(aux_chave->string, aux_titulo );
 		insere_chave_is( iride, * aux_chave);
 	}
 }
@@ -456,39 +473,40 @@ void criar_iride(Indice *iride){
 ip == 1? primario : secundario */
 void write_btree(void *salvar, int rrn, char ip){
 	int i, j;
-	char temp[3];
+	char temp[20];
 	
 	
 	if(ip == '1'){
-		char aux_node[tamanho_registro_ip];
+		char * aux_node = (char *) malloc(sizeof(char) * tamanho_registro_ip + 1);
 		/* casting no node para o indice certo */
-		node_Btree_ip * salvar_ip;
+		node_Btree_ip * salvar_ip = (node_Btree_ip *) malloc(sizeof(node_Btree_ip));
 		salvar_ip = salvar;
 				
 		/* preencher os registro com '#' e '*' */
 		j = 0;
-		while( j > tamanho_registro_ip - ordem_ip * 3){
+		 while( j < tamanho_registro_ip - ordem_ip * 3){
 			aux_node[j] = '#';
 			j++;
 		}
-		while( j > tamanho_registro_ip){
+		while( j < tamanho_registro_ip){
 			aux_node[j] = '*';
 			j++;
-		}
+		} 
 
-		sprintf(temp,"%d", salvar_ip->num_chaves);
+		sprintf(temp,"%03d", salvar_ip->num_chaves);
 		strncpy(aux_node, temp, 3);
 
-		for(i = 0; i < salvar_ip->num_chaves;i++){
+		 for(i = 0; i < salvar_ip->num_chaves;i++){
 			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
-			strcpy(aux_node +  3 + i * 14 , salvar_ip->chave[i].pk );
+			strncpy(aux_node +  3 + i * 14 , salvar_ip->chave[i].pk, 10 );
 			
 			/* somar + 10 bytes da PK dessa chave
 			rrn é um inteiro então tem que ser convertido
 			rrn do arquivo */
 
-			
-			strcpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp );
+			/*usar strncpy porque o strcpy preenche com 0*/
+			sprintf(temp,"%04d", nregistrosip);
+			strncpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp, 3);
 	
 		}
 
@@ -501,19 +519,20 @@ void write_btree(void *salvar, int rrn, char ip){
 		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta */
 
 		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
-		for(i = 0; i < ordem_ip ;i++){
-				if (salvar_ip->desc[i] == NULL)
+		 for(i = 0; i < ordem_ip ;i++){
+				if (salvar_ip->desc[i] == -1)
 					break;
 				sprintf(temp,"%d", salvar_ip->desc[i]);
-				strcpy(aux_node + aux_ponteiro + i * 3, temp);
+				strncpy(aux_node + aux_ponteiro + i * 3, temp,3);
 
-		}
+		} 
 
-		strcpy(ARQUIVO_IP + (rrn) * tamanho_registro_ip, aux_node);	
+		strncpy(ARQUIVO_IP + (rrn) * tamanho_registro_ip, aux_node, tamanho_registro_ip);	
 		nregistrosip++;
-	
+		free(aux_node);
+		
 	}
-	else{
+	 else{
 		char aux_node[tamanho_registro_is];
 		
 		/* preencher os registro com '#' e '*' */
@@ -566,6 +585,8 @@ void write_btree(void *salvar, int rrn, char ip){
 
 		strcpy(ARQUIVO_IS + (rrn) * tamanho_registro_is, aux_node);	
 		nregistrosis++;
+		free(aux_node);
+
 	}
 
 }
@@ -578,8 +599,8 @@ void * read_btree( void * retorno, int rrn, int ip){
 	if(ip == 1){
 		
 		node_Btree_ip * retorno_ip;
-		char * aux_node = malloc(sizeof(char) *tamanho_registro_ip); 
-		char temp[3];
+		char * aux_node = malloc(sizeof(char) *tamanho_registro_ip + 1 ); 
+		char temp[20];
 		int i;
 		retorno_ip = retorno;
 		Chave_ip * aux_chave;
@@ -741,10 +762,15 @@ void listar(Indice iprimary, Indice iride){
 
 /* Insere um novo registro na Árvore B */
 void insere_chave_ip(Indice *iprimary, Chave_ip chave){
-	
-	node_Btree_ip * aux_node = malloc(sizeof( node_Btree_ip));
-
-	if( iprimary->raiz == NULL){
+	int i = 0;
+	node_Btree_ip * aux_node = (node_Btree_ip *)malloc(sizeof( node_Btree_ip));
+	(*aux_node).chave = (Chave_ip *) malloc(sizeof(Chave_ip)* (ordem_ip -1));
+	aux_node->num_chaves = 0;
+	aux_node->desc = (int * ) malloc(sizeof(int) * ordem_ip);
+	for(i= 0; i < ordem_ip; i++)
+		aux_node->desc[i] = -1;
+	i = 0;
+	if( iprimary->raiz == -1){
 		aux_node->chave[0] = chave;
 		aux_node->num_chaves++;
 		aux_node->folha = 'T';
@@ -771,7 +797,7 @@ void insere_chave_is(Indice *iride, Chave_is chave){
 	
 	node_Btree_is * aux_node = malloc(sizeof( node_Btree_is));
 
-	if( iride->raiz == NULL){
+	if( iride->raiz == -1){
 		aux_node->chave[0] = chave;
 		aux_node->num_chaves++;
 		aux_node->folha = 'T';
