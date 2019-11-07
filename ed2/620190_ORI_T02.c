@@ -506,7 +506,7 @@ void write_btree(void *salvar, int rrn, char ip){
 
 			/*usar strncpy porque o strcpy preenche com 0*/
 			sprintf(temp,"%04d", nregistrosip);
-			strncpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp, 3);
+			strncpy(aux_node + 3 + (i + 1)*(10) + i * 4, temp, 4);
 	
 		}
 
@@ -601,16 +601,18 @@ void * read_btree( void * retorno, int rrn, int ip){
 		node_Btree_ip * retorno_ip = (node_Btree_ip *) criar_no('1');
 		char * aux_node = (char *) malloc(sizeof(char) *tamanho_registro_ip + 1 ); 
 		char temp[20];
+		char temp2[4];
+		temp2[3] = '\0';
 		int i;
-		retorno_ip = retorno;
+		retorno_ip = (node_Btree_ip *) retorno;
 		Chave_ip * aux_chave;
 
 
 		strncpy(aux_node, ARQUIVO_IP + (rrn) * tamanho_registro_ip, tamanho_registro_ip);
 
 		/*  Num de chaves tem que ser convertido pra int */
-		strncpy(temp, aux_node,3);
-		sscanf(temp, "%d", &retorno_ip->num_chaves);
+		strncpy(temp2, aux_node,3);
+		sscanf(temp2, "%d", &retorno_ip->num_chaves);
 
 		for(i = 0; i < retorno_ip->num_chaves;i++){
 			/*  somar os 3B para o num_chaves + os B das chaves já colocadas */
@@ -620,12 +622,13 @@ void * read_btree( void * retorno, int rrn, int ip){
 			
 			/* somar + 10 bytes da PK dessa chave
 			*rrn é um inteiro então tem que ser convertido */
-			strcpy(temp, aux_node + 3 + (i + 1)*(10) + i * 4);
+			strncpy(temp, aux_node + 3 + (i + 1)*(10) + i * 4, 3);
 			sscanf(temp, "%d", &aux_chave->rrn);
 
 			/*  pode dar problema aqui */
 			retorno_ip->chave[i] = * aux_chave;
 		}
+
 
 		int aux_ponteiro = 3 + (ordem_ip - 1) * 14;
 		
@@ -639,9 +642,11 @@ void * read_btree( void * retorno, int rrn, int ip){
 		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta
 		* descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_ip ;i++){
-				strcpy(temp, aux_node + aux_ponteiro + i * 3);
-				sscanf(temp, "%d",  &retorno_ip->desc[i]);
+				strncpy(temp2, aux_node + aux_ponteiro + i * 3, 3);
+				if(0 != strncmp("***", temp2, 3))
+					sscanf(temp2, "%d",  &retorno_ip->desc[i]);
 		}
+		return  retorno_ip;
 
 
 
@@ -763,8 +768,6 @@ void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 	int i = 0;
 	node_Btree_ip * aux_node = (node_Btree_ip *) criar_no('1');
 	aux_node->num_chaves = 0;
-	for(i= 0; i < ordem_ip; i++)
-		aux_node->desc[i] = -1;
 	i = 0;
 	if( iprimary->raiz == -1){
 		aux_node->chave[0] = chave;
@@ -824,9 +827,11 @@ void insere_chave_is(Indice *iride, Chave_is chave){
 int insere_aux_ip(int noderrn,  Chave_ip * chave){
 	int i;
 	int filho_direita;
+	Chave_ip chavinha;
 	node_Btree_ip * aux_node = (node_Btree_ip *) criar_no('1');
-	/* um monte de duvida sobre como segurar o rrn*/
 	read_btree(aux_node, noderrn, 1);
+	/* um monte de duvida sobre como segurar o rrn*/
+	
 	
 	if(aux_node->folha == 'T'){
 		
@@ -837,7 +842,9 @@ int insere_aux_ip(int noderrn,  Chave_ip * chave){
 				aux_node->chave[i] = aux_node->chave[i+1];
 				i--;
 			}
-			aux_node->chave[i] = * chave;
+			aux_node->chave[i] = *chave;
+			chavinha = aux_node->chave[1];
+
 			aux_node->num_chaves++;
 			write_btree(aux_node, noderrn, '1');
 			chave = NULL;
@@ -1044,7 +1051,7 @@ void *criar_no(char ip){
 	int i;
 	if(ip == '1'){
 		node_Btree_ip * aux_node = (node_Btree_ip *)  malloc(sizeof(node_Btree_ip));
-		aux_node->chave = (Chave_ip *) malloc(sizeof(Chave_ip) * (ordem_ip - 1));
+		aux_node->chave = (Chave_ip *) malloc(sizeof(Chave_ip ) * (ordem_ip - 1));
 		aux_node->desc = (int*) malloc(sizeof(int) *ordem_ip);
 		for (i = 0; i < ordem_ip; i++)
 			aux_node->desc[i] = -1;
