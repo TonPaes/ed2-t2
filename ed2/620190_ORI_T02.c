@@ -421,7 +421,7 @@ char * gerarTitulo( Carona j){
 	}
 
 	return titulo;
-}
+}	
 
 /* (Re)faz o Cria iprimary
 * Recebe a raiz e cria, uma nova arvore lendo o arquivo de dados */
@@ -528,7 +528,6 @@ void write_btree(void *salvar, int rrn, char ip){
 		}
 
 		strncpy(ARQUIVO_IP + (rrn) * tamanho_registro_ip, aux_node, tamanho_registro_ip);
-		nregistrosip++;
 		free(aux_node);
 
 	}
@@ -584,7 +583,7 @@ void write_btree(void *salvar, int rrn, char ip){
 		}
 
 		strncpy(ARQUIVO_IS + (rrn) * tamanho_registro_is, aux_node, tamanho_registro_is );
-		nregistrosis++;
+		
 		free(aux_node);
 
 	}
@@ -630,7 +629,7 @@ void * read_btree( void * retorno, int rrn, int ip){
 		}
 
 
-		int aux_ponteiro = 3 + (ordem_ip - 1) * 14;
+		int aux_ponteiro = 3 + (ordem_ip  - 1 ) * 14;
 
 		/*  Salvar se é folha ou não
 		* essa conta do aux_ponteiro tem que ser testada */
@@ -788,8 +787,10 @@ void insere_chave_ip(Indice *iprimary, Chave_ip chave){
 			aux_node->chave[0] = chave;
 			aux_node->desc[0] = iprimary->raiz;
 			aux_node->desc[1] = filho_direito;
-			iprimary->raiz = nregistrosip;
+			nregistrosip++;
 			write_btree(aux_node, nregistrosip, '1');
+			
+			iprimary->raiz = nregistrosip;
 		}
 	}
 
@@ -818,6 +819,7 @@ void insere_chave_is(Indice *iride, Chave_is chave){
 			iride->raiz = nregistrosis;
 			write_btree(aux_node, nregistrosis, '0');
 
+
 		}
 	}
 }
@@ -840,7 +842,7 @@ int insere_aux_ip(int noderrn,  Chave_ip * chave){
 		if(aux_node->num_chaves < ordem_ip -1){
 			i = aux_node->num_chaves;
 
-			while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk)){
+			while( i > 0 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk)){
 				aux_node->chave[i] = aux_node->chave[i-1];
 				i--;
 			}
@@ -858,24 +860,29 @@ int insere_aux_ip(int noderrn,  Chave_ip * chave){
 		}
 	}else
 	{
-		i = aux_node->num_chaves;
-		while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk))
+		i = aux_node->num_chaves ;
+		while( i > 0 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk))
 			i--;
-		i++;
 		/* Quando não encontra*/
 		filho_direita = insere_aux_ip(aux_node->desc[i], chave);
 
 		if(filho_direita != -1){
 
+			/*problema da divisão da propagação, os filhos não estão sendo copiados
+			*
+			*
+			* CONTINUE?
+			*
+			*/
 			if(aux_node->num_chaves < ordem_ip -1){
 				i = aux_node->num_chaves;
-				while( i > 0 && 0 < strcmp(chave->pk, aux_node->chave[i].pk)){
-					aux_node->desc[i] = aux_node->desc[i+1];
-					aux_node->chave[i] = aux_node->chave[i+1];
+				while( i > 0 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk)){
+					aux_node->desc[i] = aux_node->desc[i-1];
+					aux_node->chave[i] = aux_node->chave[i-1];
 					i--;
 				}
 				aux_node->chave[i] = * chave;
-				aux_node->desc[i] = filho_direita;
+				aux_node->desc[i+1] = filho_direita;
 				aux_node->num_chaves++;
 				write_btree(aux_node, noderrn, '1');
 				chave = NULL;
@@ -904,7 +911,7 @@ int insere_aux_is(int noderrn, Chave_is *chave){
 		if(aux_node->num_chaves < ordem_is -1){
 			i = aux_node->num_chaves;
 
-			while( i > 0 && 0 < strcmp(chave->string, aux_node->chave[i].string)){
+			while( i > 0 && 0 > strcmp(chave->string, aux_node->chave[i].string)){
 				aux_node->chave[i] = aux_node->chave[i+1];
 				i--;
 			}
@@ -931,7 +938,7 @@ int insere_aux_is(int noderrn, Chave_is *chave){
 
 			if(aux_node->num_chaves < ordem_ip -1){
 				i = aux_node->num_chaves;
-				while( i > 0 && 0 < strcmp(chave->string, aux_node->chave[i].string)){
+				while( i > 0 && 0 > strcmp(chave->string, aux_node->chave[i].string)){
 					aux_node->desc[i] = aux_node->desc[i+1];
 					aux_node->chave[i] = aux_node->chave[i+1];
 					i--;
@@ -966,12 +973,12 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 
 	i = aux_node->num_chaves;
 	new_node->folha = aux_node->folha;
-	new_node->num_chaves = ordem_ip/2;
+	new_node->num_chaves = (ordem_ip -1) /2;
 
 	for(j = new_node->num_chaves; j > 0; j--){
 		if( !chave_alocada && 0 < strcmp(chave->pk, aux_node->chave[i-1].pk)){
 			new_node->chave[j-1] = * chave;
-			new_node->desc[j] = desc_dir_rrn;
+			new_node->desc[j-1] = desc_dir_rrn;
 			chave_alocada = 1;
 		}else
 		{
@@ -982,9 +989,11 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	}
 
 	if(!chave_alocada){
-		while (i >= 1 && 0 < strcmp(chave->pk, aux_node->chave[i-1].pk) ){
+		while (i >= 1 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk) ){
 			aux_node->chave[i] = aux_node->chave[i-1];
-			aux_node->desc[i+1] = aux_node->desc[i];
+			aux_node->desc[i] = aux_node->desc[i-1];
+			i--;
+
 		}
 		aux_node->chave[i] = *chave;
 		aux_node->desc[i+1] = desc_dir_rrn;
@@ -993,13 +1002,18 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 
 	/*chave é o nó promovido*/
 	* chave = aux_node->chave[i];
+
 	new_node->desc[0] = aux_node->desc[i+1];
 	aux_node->num_chaves = i;
 
+	write_btree(aux_node, rrnesq, '1');
+
+	nregistrosip++;
 	write_btree(new_node, nregistrosip, '1');
+	
 
 	/* nregistros vai ser o rrn do filho_direito*/
-	return nregistrosip - 1;
+	return nregistrosip;
 	/* tem que retornar o RRN no new_node quando ele for escrito no indice*/
 }
 int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
@@ -1028,7 +1042,7 @@ int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
 	}
 
 	if(!chave_alocada){
-		while (i >= 1 && 0 < strcmp(chave->string, aux_node->chave[i-1].string) ){
+		while (i >= 1 && 0 > strcmp(chave->string, aux_node->chave[i-1].string) ){
 			aux_node->chave[i] = aux_node->chave[i-1];
 			aux_node->desc[i+1] = aux_node->desc[i];
 		}
