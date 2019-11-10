@@ -877,7 +877,7 @@ int insere_aux_ip(int noderrn,  Chave_ip * chave){
 			if(aux_node->num_chaves < ordem_ip -1){
 				i = aux_node->num_chaves;
 				while( i > 0 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk)){
-					aux_node->desc[i] = aux_node->desc[i-1];
+					aux_node->desc[i+1] = aux_node->desc[i];
 					aux_node->chave[i] = aux_node->chave[i-1];
 					i--;
 				}
@@ -978,7 +978,7 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	for(j = new_node->num_chaves; j > 0; j--){
 		if( !chave_alocada && 0 < strcmp(chave->pk, aux_node->chave[i-1].pk)){
 			new_node->chave[j-1] = * chave;
-			new_node->desc[j-1] = desc_dir_rrn;
+			new_node->desc[j] = desc_dir_rrn;
 			chave_alocada = 1;
 		}else
 		{
@@ -991,7 +991,7 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	if(!chave_alocada){
 		while (i >= 1 && 0 > strcmp(chave->pk, aux_node->chave[i-1].pk) ){
 			aux_node->chave[i] = aux_node->chave[i-1];
-			aux_node->desc[i] = aux_node->desc[i-1];
+			aux_node->desc[i+1] = aux_node->desc[i];
 			i--;
 
 		}
@@ -1003,7 +1003,7 @@ int divide_no_ip(int rrnesq, Chave_ip *chave, int desc_dir_rrn){
 	/*chave é o nó promovido*/
 	* chave = aux_node->chave[i];
 
-	new_node->desc[0] = aux_node->desc[i+1];
+	new_node->desc[0] = aux_node->desc[( i / 2) + 2];
 	aux_node->num_chaves = i;
 
 	write_btree(aux_node, rrnesq, '1');
