@@ -217,7 +217,7 @@ int insere_aux_is(int noderrn, Chave_is *chave);
 /* VOCÊS NÃO NECESSARIAMENTE PRECISAM USAR TODAS ESSAS FUNÇÕES, É MAIS PARA TEREM UMA BASE MESMO,
  * PODEM CRIAR SUAS PRÓPRIAS FUNÇÕES SE PREFERIREM */
 
-
+/*git bug added*/
 int main()
 {
 	char *p; /* # */
