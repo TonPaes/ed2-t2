@@ -397,7 +397,7 @@ Carona recuperar_registro(int rrn)
 
 /*Gera Chave da struct Carona*/
 void gerarChave(Carona *novo){
-	/* Não tenho certeza se essa associação vai funcionar, talvez eu tenha que acessar as str */
+ /* Não tenho certeza se essa associação vai funcionar, talvez eu tenha que acessar as str */
 	novo->pk[0] = toupper(novo->nome[0]);
 	novo->pk[1] = toupper(novo->placa[0]);
 	novo->pk[2] = toupper(novo->placa[1]);
