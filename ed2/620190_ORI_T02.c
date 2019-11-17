@@ -412,14 +412,41 @@ void gerarChave(Carona *novo){
 }
 
 char * gerarTitulo( Carona j){
-	char titulo[52];
-	char * aux;
-	aux = strtok(titulo, "|");
+	char * titulo = (char *) malloc(51);
+	char * aux = (char *) malloc(51);
+	aux = j.trajeto;
+	aux = strtok(aux, "|");
 	while(aux != NULL){
 		aux = strtok(NULL, "|");
+			if(aux == NULL)
+				break;
 		strcpy(titulo, aux);
 	}
-
+	int i = strlen(titulo);
+	titulo[i] = '$';
+	i++;
+	titulo[i] = j.data[0];
+	i++;
+	titulo[i] = j.data[1];
+	i++;
+	titulo[i] = j.data[3];
+	i++;
+	titulo[i] = j.data[4];
+	i++;
+	titulo[i] = j.data[6];
+	i++;
+	titulo[i] = j.data[7];
+	i++;
+	titulo[i] = j.hora[0];
+	i++;
+	titulo[i] = j.hora[1];
+	i++;
+	titulo[i] = j.hora[3];
+	i++;
+	titulo[i] = j.hora[4];
+	i++;
+	/*aqui pode dar merda, quuando a chave tiver valor muito grande*/
+	titulo[i] = '\0';
 	return titulo;
 }	
 
@@ -539,17 +566,9 @@ void write_btree(void *salvar, int rrn, char ip){
 		/*  casting no node para o indice certo */
 		node_Btree_is * salvar_is = (node_Btree_is *) criar_no('0');
 		salvar_is = salvar;
-
+		int aux_ponteiro = 0;
 				/* preencher os registro com '#' e '*' */
 		j = 0;
-		while( j > tamanho_registro_is - ordem_is * 3){
-			aux_node[j] = '#';
-			j++;
-		}
-		while( j > tamanho_registro_is){
-			aux_node[j] = '*';
-			j++;
-		}
 
 
 		/*  o num de chaves já tem que estar atualizado
@@ -566,11 +585,26 @@ void write_btree(void *salvar, int rrn, char ip){
 			/* somar + 10 bytes da PK dessa chave
 			* chaves já vem formatadas pra no formato DESTINO$AAMMDD$HHMM */
 			strncpy(aux_node + 3 + (i + 1)*(10) + i * (TAM_STRING_INDICE), salvar_is->chave[i].string , sizeof(salvar_is->chave[i].string));
-
+			aux_ponteiro = strlen(salvar_is->chave[i].string);
+			aux_ponteiro =  3 + (i + 1)*(10) + i * (TAM_STRING_INDICE) + strlen(salvar_is->chave[i].string);
+			
+			while(aux_ponteiro < (3 + (i+1) * (10) + (i+1) * TAM_STRING_INDICE)){
+				aux_node[aux_ponteiro] = '#';
+				aux_ponteiro++;
+			}
+		}
+		while(i < ordem_is -1){
+			j = 0;
+			while(j < 10 + TAM_STRING_INDICE){
+				aux_node[aux_ponteiro] = '#';
+				j++;
+				aux_ponteiro++;
+			}
+			i++;
 		}
 
 
-		int aux_ponteiro = 3 + (ordem_is - 1) * 51;
+		
 
 		/* Salvar se é folha ou não
 		 essa conta do aux_ponteiro tem que ser testada */
@@ -580,9 +614,12 @@ void write_btree(void *salvar, int rrn, char ip){
 		/*  descendentes precisam do tratamento pro casao de não ter o filho da direita */
 		for(i = 0; i < ordem_is ;i++){
 				if (salvar_is->desc[i] == -1)
-					break;
+					for(j =0; j<3; j++)
+						aux_node[aux_ponteiro +(i *3)+ j] = '*';
+				else{
 				sprintf(temp,"%03d", salvar_is->desc[i]);
 				strncpy(aux_node + aux_ponteiro + i * 3, temp, 3);
+				}
 		}
 
 		strncpy(ARQUIVO_IS + (rrn) * tamanho_registro_is, aux_node, tamanho_registro_is );
@@ -666,8 +703,7 @@ void * read_btree( void * retorno, int rrn, int ip){
 		retorno_is = (node_Btree_is *) retorno;
 		Chave_is * aux_chave;
 		int i = 0;
-
-		
+		int j = 0;
 
 		strncpy(aux_node, ARQUIVO_IS + (rrn) * tamanho_registro_is, tamanho_registro_is );
 
@@ -683,7 +719,10 @@ void * read_btree( void * retorno, int rrn, int ip){
 
 
 			/* somar + 10 bytes da PK dessa chave */
-			strncpy(aux_chave->string, aux_node +  3 + (i+1) * (10) + i * 41, 41);
+			j = 0;
+			while(aux_node[j + 3 + (i+1) * (10) + i * 41] != '#')
+				j++;
+			strncpy(aux_chave->string, aux_node +  3 + (i+1) * (10) + i * 41, j);
 
 			/*  pode dar problema aqui */
 			retorno_is->chave[i] = * aux_chave;
@@ -697,7 +736,7 @@ void * read_btree( void * retorno, int rrn, int ip){
 
 		/* salvar os RRNs das folhas, RRNs tem que estar na posição correta
 		 descendentes precisam do tratamento pro casao de não ter o filho da direita */
-		for(i = 0; i <= retorno_is->num_chaves ;i++){
+		for(i = 0; i < ordem_is ;i++){
 			if(retorno_is->folha == 'T')
 				break;
 			
@@ -1099,7 +1138,7 @@ int divide_no_is(int rrnesq, Chave_is *chave, int desc_dir_rrn){
 	write_btree(aux_node, rrnesq, '0');
 
 	nregistrosis++;
-	write_btree(new_node, nregistrosip, '0');
+	write_btree(new_node, nregistrosis, '0');
 
 	/* nregistros vai ser o rrn do filho_direito*/
 	return nregistrosis;
